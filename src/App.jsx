@@ -1,59 +1,67 @@
-// App.jsx
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Gallery from './Gallery';
 import DestinationSelector from './DestinationSelector';
+import localTours from './data';
 
-const url = 'https://course-api.com/react-tours-project';
-
-export default function App() {
+const App = () => {
   const [tours, setTours] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [selected, setSelected] = useState('all');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
-  const fetchTours = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-      setTours(data);
-      setError(false);
-    } catch (err) {
-      console.error(err);
-      setError(true);
-    }
-    setLoading(false);
-  };
-
+  // Fetch tours from backup data (localTours)
   useEffect(() => {
+    const fetchTours = async () => {
+      setLoading(true);
+      try {
+        setTours(localTours); // Using localTours instead of external API to avoid CORS
+        setError(false);
+      } catch (error) {
+        console.error(error);
+        setError(true);
+      }
+      setLoading(false);
+    };
+
     fetchTours();
   }, []);
 
+  // Remove one tour from the list
   const handleRemove = (id) => {
     const newTours = tours.filter((tour) => tour.id !== id);
     setTours(newTours);
   };
 
-  const filteredTours =
-    selected === 'all'
-      ? tours
-      : tours.filter((tour) => tour.name === selected);
+  // Reset tours to original local data
+  const resetTours = () => {
+    setTours(localTours);
+    setSelected('all');
+  };
+
+  // Filter by selected tour
+  const filteredTours = selected === 'all'
+  ? tours
+  : tours.filter((tour) => tour.name === selected);
 
   return (
     <main>
       <h1>🌍 Tour Destination Selector</h1>
+
       <DestinationSelector
         tours={tours}
         selected={selected}
         setSelected={setSelected}
       />
+
       <Gallery
         tours={filteredTours}
         loading={loading}
         error={error}
         onRemove={handleRemove}
-        onRefresh={fetchTours}
+        onRefresh={resetTours}
       />
     </main>
   );
-}
+};
+
+export default App;
